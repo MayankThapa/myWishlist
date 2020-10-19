@@ -1,43 +1,63 @@
 import React from 'react';
+import { connect } from 'react-redux';
+import { selectWishlistBook, updateBookArr } from './store/actions';
 
-export default class Wishlist extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-       
-        }   
-  }
-//   toggleActive(wishId) { 
-//     let newState = Object.assign({}, this.state)
-//     let wish = _.find(newState.books, {id: wishId});
-//     wish.have = !wish.have
-//     this.setState(newState)
-//   }
-  render() {
-    return (<SingleBook books={this.state.books} 
-        // toggleActive={(wishId)=>this.toggleActive(wishId)} 
-        />);
-  }  
-}
-
-class SingleBook extends React.Component  {
-  render() {  
-    const listItem = this.props.books.map((wish) => {
-      return (
-        <li className={wish.have ? 'active' : 'notactive'} key={wish.id}>
-          <a >{wish.volumeInfo.title}</a>
-          {/* <span>{wish.have ? 'Have this one' : 'Want this one'}</span> */}
-          <button 
-            // onClick={() => this.props.toggleActive(wish.id)}
-          >{wish.have ? 'Remove from wishlist' : 'Add to Wishlist'}</button>
-        </li>
-      );
-    })
-    
+function SingleWish(props) {
+  const listItem = props.books.map((book) => {
     return (
-      <ul className="wish-list">
-        { listItem }
-      </ul>
-      );
+          <li className='wishlist' key={book.id}>
+          <img className="books_img" src={book.volumeInfo.imageLinks.smallThumbnail} alt={book.volumeInfo.title} />
+          <a className="book_title">{book.volumeInfo.title}</a>
+          <button 
+            onClick={() => props.updateWishlistBook(book)}
+          >Remove</button>
+        </li>   
+    );
+  })
+  
+  return (
+    <ul className="wish-list">
+      { listItem }
+    </ul>
+    );
+}
+
+function WishList(props) {
+  let selectedBooks = props.wishlist;
+  const updateWishlistBook = (wish) => { 
+    const newBooksArr = props.books.map((book) => {      
+      if(book.id == wish.id) {
+          console.log(wish.id, selectedBooks.indexOf(wish.id),"else", selectedBooks)
+          book.have = false;
+          selectedBooks = selectedBooks.filter((item) => item.id !== wish.id);
+      }
+      return book;
+    })
+    props.updateWishlistBook(selectedBooks);
+    props.updateBookArr(newBooksArr)
+  }
+  
+    return ( selectedBooks.length ? <SingleWish books={selectedBooks} updateWishlistBook={(book)=>updateWishlistBook(book)} /> : <p className="alternateText"><strong>Start adding your wishlist & All selected books should be unique.</strong></p>); 
+}
+
+const mapStateToProps = (state) => {
+  return {
+    books: state.getBooks,
+    wishlist: state.selectedBooks
   }
 }
+const mapDispatchToProps = (dispatch) => {
+  return {
+    updateBookArr: (bookArr) => {
+      dispatch(updateBookArr(bookArr))
+    },
+    updateWishlistBook: (book) => {
+      dispatch(selectWishlistBook(book))
+    }
+  }
+}
+
+const WishListComponent = connect(mapStateToProps, mapDispatchToProps)(WishList);
+
+export default WishListComponent;
+
